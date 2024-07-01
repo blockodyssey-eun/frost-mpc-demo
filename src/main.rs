@@ -84,6 +84,7 @@ async fn main() -> Result<()> {
     let tx = TransactionRequest::new()
         .to(to_address)
         .value(U256::from(parse_ether(0.0001)?));
+
     let tx_rlp_unsigned = tx.rlp_unsigned();
     let tx_rlp_as_ref = tx_rlp_unsigned.as_ref();
 
@@ -104,10 +105,7 @@ async fn main() -> Result<()> {
     // generates the final signature.
     ////////////////////////////////////////////////////////////////////////////
     let group_signature = frost::aggregate(&signing_package, &signature_shares, &pubkey_package)?;
-
     let serialized_signature = group_signature.serialize()?;
-
-    // let signed_tx = combine_rlp_and_signature(tx_rlp_as_ref, &serialized_signature, 11155111u64);
 
     let is_signature_valid = pubkey_package
         .verifying_key()
@@ -117,7 +115,10 @@ async fn main() -> Result<()> {
 
     println!("{:?}", is_signature_valid);
     let tx_bytes = Bytes::from(serialized_signature);
-    let _ = send_to_test_ether(&provider, tx_bytes).await?;
+    println!("{:?}", group_signature);
+
+    // TODO: 솔리디티 검증을 위해 필요한 값들 출력
+
     Ok(())
 }
 
