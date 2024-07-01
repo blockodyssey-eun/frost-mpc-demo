@@ -3,7 +3,7 @@
  * Error: (code: -32602, message: transaction could not be decoded: could not decode RLP components: extra data at end, data: None)
  *
  *
- * Signature값 변환 필요 (슈노르 R,z -> r,s)
+ * Signature값 변환 필요 (슈노르 R,z -> ECDSA r,s)
  *
  */
 use dotenv::dotenv;
@@ -61,7 +61,7 @@ async fn main() -> Result<()> {
     let mut commitments_map = BTreeMap::new();
 
     ////////////////////////////////////////////////////////////////////////////
-    // Round 1: generating nonces and signing commitments for each participant
+    // Round 1: 참가자 Nonce 및 Commitments 생성
     ////////////////////////////////////////////////////////////////////////////
     for participant_index in 1..(min_signers as u16 + 1) {
         let participant_identifier = participant_index.try_into().expect("should be nonzero");
@@ -91,7 +91,7 @@ async fn main() -> Result<()> {
     let signing_package = frost::SigningPackage::new(commitments_map, tx_rlp_as_ref);
 
     ////////////////////////////////////////////////////////////////////////////
-    // Round 2: each participant generates their signature share
+    // Round 2: 각 참가자 개별 공유 서명 생성
     ////////////////////////////////////////////////////////////////////////////
     for participant_identifier in nonces_map.keys() {
         let key_package = &key_packages[participant_identifier];
@@ -101,8 +101,7 @@ async fn main() -> Result<()> {
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    // Aggregation: collects the signing shares from all participants,
-    // generates the final signature.
+    // Aggregation: 모든 참가자 공유 서명 수집(Aggregate)
     ////////////////////////////////////////////////////////////////////////////
     let group_signature = frost::aggregate(&signing_package, &signature_shares, &pubkey_package)?;
     let serialized_signature = group_signature.serialize()?;
